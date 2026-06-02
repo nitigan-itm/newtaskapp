@@ -1,6 +1,7 @@
 import { Router } from 'express';
 import { getUsers, createUser, updateAvatar, getUsersProgress, changePassword } from '../controllers/userController';
 import { authenticateToken } from '../middlewares/authMiddleware';
+import { authLimiter } from '../middlewares/rateLimiter';
 
 const router = Router();
 
@@ -11,6 +12,6 @@ router.get('/', getUsers as any);
 router.post('/', createUser as any);
 router.patch('/avatar', updateAvatar as any);
 router.get('/progress', getUsersProgress as any);
-router.patch('/password', changePassword as any);
+router.patch('/password', authLimiter as any, changePassword as any);
 
 export default router;

@@ -12,14 +12,30 @@ export const register = async (req: Request, res: Response) => {
       return res.status(400).json({ error: 'Name, email, and password are required' });
     }
 
-    const existingUser = await prisma.user.findUnique({ where: { email: email.toLowerCase() } });
+    const trimmedName = name.trim();
+    const trimmedEmail = email.trim().toLowerCase();
+
+    if (trimmedName.length < 2) {
+      return res.status(400).json({ error: 'Name must be at least 2 characters long' });
+    }
+
+    // Standard email validation regex
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(trimmedEmail)) {
+      return res.status(400).json({ error: 'Invalid email address format' });
+    }
+
+    if (password.length < 6) {
+      return res.status(400).json({ error: 'Password must be at least 6 characters long' });
+    }
+
+    const existingUser = await prisma.user.findUnique({ where: { email: trimmedEmail } });
     if (existingUser) {
       return res.status(400).json({ error: 'Email is already registered' });
     }
 
     const passwordHash = await bcrypt.hash(password, 10);
-    const initials = name
-      .trim()
+    const initials = trimmedName
       .split(' ')
       .map((n: string) => n[0])
       .join('')
@@ -28,8 +44,8 @@ export const register = async (req: Request, res: Response) => {
 
     const newUser = await prisma.user.create({
       data: {
-        name,
-        email: email.toLowerCase(),
+        name: trimmedName,
+        email: trimmedEmail,
         role: role || 'Contributor',
         avatar: initials,
         passwordHash,

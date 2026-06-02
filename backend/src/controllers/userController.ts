@@ -164,6 +164,10 @@ export const changePassword = async (req: AuthRequest, res: Response) => {
       return res.status(400).json({ error: 'Current password and new password are required' });
     }
 
+    if (newPassword.length < 6) {
+      return res.status(400).json({ error: 'New password must be at least 6 characters long' });
+    }
+
     const user = await prisma.user.findUnique({ where: { id: req.user.id } });
     if (!user) {
       return res.status(404).json({ error: 'User not found' });
