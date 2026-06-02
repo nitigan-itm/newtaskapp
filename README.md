@@ -45,55 +45,6 @@ newtaskapp/
 
 ---
 
-## 💻 Setup and Local Running
-
-### Prerequisites
-* **Node.js** (v18 or higher recommended)
-* **npm** or **yarn**
-
-### Step 1: Install Dependencies
-Run in the root folder to install frontend dependencies:
-```bash
-npm install
-```
-
-Run in the `backend` folder to install backend dependencies:
-```bash
-cd backend
-npm install
-```
-
-### Step 2: Initialize Database (Backend)
-Run these commands inside the `backend` folder to set up your SQLite database and generate the Prisma Client:
-```bash
-npx prisma generate
-npx prisma db push
-npm run seed
-```
-
-### Step 3: Run the Project
-Start the backend server (starts on `http://localhost:5000`):
-```bash
-cd backend
-npm run dev
-```
-
-Start the frontend application (starts on `http://localhost:3000`):
-```bash
-# In the root project directory
-npm run dev
-```
-
----
-
-## 🔒 Security Configurations
-Security features can be modified via environment variables in `backend/.env`:
-* `JWT_SECRET`: Secret key used for signing JWT login tokens.
-* `FRONTEND_URL`: URL of the approved frontend client (defaults to `http://localhost:3000`).
-* `NODE_ENV`: Set to `production` or `development` to trigger dev CORS bypasses.
-
----
-
 ## 📊 Entity-Relationship (ER) Diagram
 
 ```mermaid
@@ -242,3 +193,129 @@ Audit trail logging key board movements and workflow activity.
 | `targetType` | String | - | Entity type changed ("task", "project", "comment"). |
 | `timestamp` | DateTime | Default: `now()` | Time the activity took place. |
 | `userId` | String | FK (User) | ID of the user who performed the action. Cascades on delete. |
+
+---
+
+## 📡 REST API Specifications
+
+The base endpoint for all routes is `http://localhost:5000/api`.
+
+### Authentication Routes (`/auth`)
+
+* **`POST /auth/register`**
+  - Registers a new user account.
+  - Body: `{ name, email, password, role }`
+  - Validations: Email format check, password $\geq$ 6 characters, name $\geq$ 2 characters.
+  - Rate Limit: Strict limit of 20 requests per 15 minutes.
+
+* **`POST /auth/login`**
+  - Authenticates user credentials.
+  - Body: `{ email, password }`
+  - Response: `{ user: { id, name, email, avatar, role }, token }`
+  - Rate Limit: Strict limit of 20 requests per 15 minutes.
+
+* **`GET /auth/me`**
+  - Fetches the active authenticated user profile.
+  - Headers: `Authorization: Bearer <token>`
+
+---
+
+### User Routes (`/users`)
+All routes require a valid JWT token header.
+
+* **`GET /users`**
+  - Fetches list of all users.
+* **`POST /users`**
+  - Creates a new team member with a placeholder credential.
+  - Body: `{ name, role }`
+* **`PATCH /users/avatar`**
+  - Updates current user's avatar initials.
+  - Body: `{ avatar }` (Max 2 characters).
+* **`GET /users/progress`**
+  - Compiles project completion percentages and metrics per user.
+* **`PATCH /users/password`**
+  - Changes the user's password.
+  - Body: `{ currentPassword, newPassword }`
+  - Validations: `newPassword` $\geq$ 6 characters.
+
+---
+
+### Project Routes (`/projects`)
+All routes require a valid JWT token header.
+
+* **`GET /projects`**
+  - Fetches all projects where user is associated.
+* **`POST /projects`**
+  - Creates a new project.
+  - Body: `{ name, description, dueDate }`
+* **`POST /projects/:id/members`**
+  - Adds a user to the project member list.
+  - Body: `{ userId }`
+
+---
+
+### Task Routes (`/tasks`)
+All routes require a valid JWT token header.
+
+* **`GET /tasks`**
+  - Fetches tasks (optionally filterable via queries: `projectId`, `assigneeId`, `status`, `priority`).
+* **`POST /tasks`**
+  - Creates a new task.
+  - Body: `{ title, description, projectId, assignee, priority, status, dueDate }`
+* **`PATCH /tasks/:id`**
+  - Updates task detail parameters.
+  - Body: `{ title, description, status, priority, assignee, dueDate, percentage, imageUrl }`
+* **`DELETE /tasks/:id`**
+  - Removes a task from the system.
+* **`PATCH /tasks/:id/move`**
+  - Quick-updates status only (used for board drag & drop).
+  - Body: `{ status }`
+
+---
+
+## 💻 Setup and Local Running
+
+### Prerequisites
+* **Node.js** (v18 or higher recommended)
+* **npm** or **yarn**
+
+### Step 1: Install Dependencies
+Run in the root folder to install frontend dependencies:
+```bash
+npm install
+```
+
+Run in the `backend` folder to install backend dependencies:
+```bash
+cd backend
+npm install
+```
+
+### Step 2: Initialize Database (Backend)
+Run these commands inside the `backend` folder to set up your SQLite database and generate the Prisma Client:
+```bash
+npx prisma generate
+npx prisma db push
+npm run seed
+```
+
+### Step 3: Run the Project
+Start the backend server (starts on `http://localhost:5000`):
+```bash
+cd backend
+npm run dev
+```
+
+Start the frontend application (starts on `http://localhost:3000`):
+```bash
+# In the root project directory
+npm run dev
+```
+
+---
+
+## 🔒 Security Configurations
+Security features can be modified via environment variables in `backend/.env`:
+* `JWT_SECRET`: Secret key used for signing JWT login tokens.
+* `FRONTEND_URL`: URL of the approved frontend client (defaults to `http://localhost:3000`).
+* `NODE_ENV`: Set to `production` or `development` to trigger dev CORS bypasses.
