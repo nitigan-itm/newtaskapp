@@ -310,7 +310,20 @@ Start the frontend application (starts on `http://localhost:3000`):
 ```bash
 # In the root project directory
 npm run dev
-```
+### 🐳 Running via Docker Compose (Recommended)
+
+To run the entire frontend and backend stack in fully isolated Docker containers (with pre-configured non-conflicting ports):
+
+1. Make sure you have **Docker Desktop** installed and running.
+2. Build and start the services from the project root folder:
+   ```bash
+   docker compose up --build -d
+   ```
+3. Open your browser:
+   - Frontend dashboard client: [http://localhost:3030](http://localhost:3030)
+   - Backend API endpoint: [http://localhost:5050/api](http://localhost:5050/api)
+
+*Note: The containers automatically set up, configure dependencies (including OpenSSL and Alpine libraries for Prisma client compatibility), push schemas, seed mock database data, and link the API connection on port 5050.*
 
 ---
 
