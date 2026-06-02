@@ -1,0 +1,92 @@
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+model User {
+  id           String          @id @default(uuid())
+  email        String          @unique
+  passwordHash String
+  name         String
+  avatar       String          // E.g., color-coded initials or profile image URL
+  role         String          // E.g., "Project Manager", "Developer", "Designer"
+  createdAt    DateTime        @default(now())
+  updatedAt    DateTime        @updatedAt
+  
+  // Relations
+  projects     ProjectMember[]
+  assignedTasks Task[]         @relation("TaskAssignee")
+  comments     Comment[]
+  activities   ActivityLog[]
+}
+
+model Project {
+  id          String          @id @default(uuid())
+  name        String
+  description String?
+  dueDate     DateTime
+  createdAt   DateTime        @default(now())
+  updatedAt   DateTime        @updatedAt
+  
+  // Relations
+  members     ProjectMember[]
+  tasks       Task[]
+}
+
+model ProjectMember {
+  projectId String
+  userId    String
+  project   Project @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  user      User    @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@id([projectId, userId])
+}
+
+model Task {
+  id          String      @id @default(uuid())
+  title       String
+  description String?
+  status      String      // "Backlog" | "To Do" | "In Progress" | "Review" | "Done"
+  priority    String      // "Low" | "Medium" | "High"
+  dueDate     DateTime
+  percentage  Int         @default(0) // 0 to 100
+  imageUrl    String?     // Preset URL or Base64 uploaded image string
+  
+  projectId   String
+  project     Project     @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  
+  assigneeId  String
+  assignee    User        @relation("TaskAssignee", fields: [assigneeId], references: [id], onDelete: Restrict)
+  
+  comments    Comment[]
+  
+  createdAt   DateTime    @default(now())
+  updatedAt   DateTime    @updatedAt
+}
+
+model Comment {
+  id        String   @id @default(uuid())
+  message   String
+  createdAt DateTime @default(now())
+  
+  taskId    String
+  task      Task     @relation(fields: [taskId], references: [id], onDelete: Cascade)
+  
+  authorId  String
+  author    User     @relation(fields: [authorId], references: [id], onDelete: Cascade)
+}
+
+model ActivityLog {
+  id         String   @id @default(uuid())
+  action     String   // E.g., "created task", "moved task to Done"
+  targetName String   // E.g., task or project title
+  targetType String   // "task" | "project" | "comment"
+  timestamp  DateTime @default(now())
+  
+  userId     String
+  user       User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
