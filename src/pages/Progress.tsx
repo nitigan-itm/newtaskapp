@@ -466,10 +466,54 @@ export default function Progress() {
             )}
 
             {activeTab === 'members' && (
-              <div className="bg-white dark:bg-[#1E293B] border border-slate-200 dark:border-slate-805 p-5 rounded-2xl shadow-xs space-y-4">
+              <div className="bg-white dark:bg-[#1E293B] border border-slate-200 dark:border-slate-805 p-5 rounded-2xl shadow-xs space-y-5">
                 <div>
                   <h3 className="text-sm font-extrabold text-slate-905 dark:text-white">Workspace Team Productivity</h3>
                   <p className="text-[10px] text-slate-400">Performance ratings computed from total assigned task completion percentages.</p>
+                </div>
+
+                {/* Interactive Productivity Comparison Graph */}
+                <div className="bg-slate-50/50 dark:bg-slate-900/30 border border-slate-100 dark:border-slate-850 p-4 rounded-xl space-y-3">
+                  <div className="flex justify-between items-center">
+                    <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest block">Team Performance Velocity Graph (%)</span>
+                    <span className="text-[9.5px] font-bold text-[#2563EB] dark:text-blue-400">Average Completion %</span>
+                  </div>
+
+                  <div className="flex items-end justify-between gap-2 pt-6 pb-2 px-1 border-b border-slate-205 dark:border-slate-800 min-h-[140px] select-none">
+                    {memberWorkloadStats.map((item) => {
+                      return (
+                        <div key={item.id} className="flex-1 flex flex-col items-center gap-2 group">
+                          {/* Vertical fill container */}
+                          <div className="w-full bg-slate-100 dark:bg-slate-850/60 rounded-t-lg h-24 relative flex items-end overflow-hidden border border-slate-200/40 dark:border-slate-800/20">
+                            {/* Fill bar */}
+                            <motion.div
+                              initial={{ height: 0 }}
+                              animate={{ height: `${item.avgPercent}%` }}
+                              transition={{ duration: 0.65, ease: 'easeOut' }}
+                              className="w-full bg-gradient-to-t from-blue-600 to-[#2563EB] group-hover:from-blue-500 group-hover:to-blue-600 transition-colors cursor-pointer relative"
+                            />
+                            
+                            {/* Hover info overlay */}
+                            <div className="absolute inset-x-0 bottom-1 flex justify-center opacity-0 group-hover:opacity-100 transition duration-150 pointer-events-none">
+                              <span className="bg-slate-900 text-white dark:bg-white dark:text-slate-950 font-black text-[9px] px-1 py-0.5 rounded shadow-lg">
+                                {item.avgPercent}%
+                              </span>
+                            </div>
+                          </div>
+
+                          {/* Member label tags */}
+                          <div className="text-center w-full">
+                            <span className="text-[9.5px] font-extrabold text-slate-800 dark:text-slate-250 block truncate max-w-[80px] mx-auto" title={item.name}>
+                              {item.name.split(' ')[0]}
+                            </span>
+                            <span className="text-[8px] font-bold text-slate-405 block">
+                              {item.doneCount}/{item.totalCount} Done
+                            </span>
+                          </div>
+                        </div>
+                      );
+                    })}
+                  </div>
                 </div>
 
                 <div className="divide-y divide-slate-100 dark:divide-slate-800">

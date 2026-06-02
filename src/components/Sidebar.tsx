@@ -19,7 +19,8 @@ import {
   LogOut,
   Bell,
   Sparkles,
-  TrendingUp
+  TrendingUp,
+  Users
 } from 'lucide-react';
 import { useApp } from '../context/AppContext';
 
@@ -39,6 +40,7 @@ export default function Sidebar() {
     { name: 'Projects', path: '/projects', icon: FolderKanban },
     { name: 'Tasks', path: '/tasks', icon: CheckSquare },
     { name: 'Progress', path: '/progress', icon: TrendingUp },
+    { name: 'User Progress', path: '/user-progress', icon: Users },
     { name: 'Search', path: '/search', icon: Search },
     { name: 'Settings', path: '/settings', icon: Settings },
   ];

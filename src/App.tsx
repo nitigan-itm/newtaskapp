@@ -19,6 +19,7 @@ import Projects from './pages/Projects';
 import ProjectDetail from './pages/ProjectDetail';
 import Tasks from './pages/Tasks';
 import Progress from './pages/Progress';
+import UserProgress from './pages/UserProgress';
 import Search from './pages/Search';
 import Settings from './pages/Settings';
 
@@ -76,6 +77,7 @@ export default function App() {
             <Route path="/projects/:id" element={<ProjectDetail />} />
             <Route path="/tasks" element={<Tasks />} />
             <Route path="/progress" element={<Progress />} />
+            <Route path="/user-progress" element={<UserProgress />} />
             <Route path="/search" element={<Search />} />
             <Route path="/settings" element={<Settings />} />
           </Route>
