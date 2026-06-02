@@ -1,5 +1,5 @@
-import * as express from 'express';
-import * as cors from 'cors';
+import express, { Request, Response } from 'express';
+import cors from 'cors';
 import * as dotenv from 'dotenv';
 import apiRouter from './routes';
 
@@ -22,7 +22,7 @@ app.use(express.json({ limit: '10mb' })); // Support larger base64 image uploads
 app.use('/api', apiRouter);
 
 // Health check endpoint
-app.get('/health', (req, res) => {
+app.get('/health', (req: Request, res: Response) => {
   res.json({ status: 'ok', timestamp: new Date().toISOString() });
 });
 
@@ -30,3 +30,4 @@ app.get('/health', (req, res) => {
 app.listen(PORT, () => {
   console.log(`[Server] TaskFlow backend listening on port ${PORT}`);
 });
+
