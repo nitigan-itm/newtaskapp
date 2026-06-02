@@ -91,3 +91,154 @@ Security features can be modified via environment variables in `backend/.env`:
 * `JWT_SECRET`: Secret key used for signing JWT login tokens.
 * `FRONTEND_URL`: URL of the approved frontend client (defaults to `http://localhost:3000`).
 * `NODE_ENV`: Set to `production` or `development` to trigger dev CORS bypasses.
+
+---
+
+## 📊 Entity-Relationship (ER) Diagram
+
+```mermaid
+erDiagram
+    USER {
+        string id PK
+        string email UK
+        string passwordHash
+        string name
+        string avatar
+        string role
+        datetime createdAt
+        datetime updatedAt
+    }
+
+    PROJECT {
+        string id PK
+        string name
+        string description
+        datetime dueDate
+        datetime createdAt
+        datetime updatedAt
+    }
+
+    PROJECT_MEMBER {
+        string projectId PK, FK
+        string userId PK, FK
+    }
+
+    TASK {
+        string id PK
+        string title
+        string description
+        string status
+        string priority
+        datetime dueDate
+        int percentage
+        string imageUrl
+        string projectId FK
+        string assigneeId FK
+        datetime createdAt
+        datetime updatedAt
+    }
+
+    COMMENT {
+        string id PK
+        string message
+        string taskId FK
+        string authorId FK
+        datetime createdAt
+    }
+
+    ACTIVITY_LOG {
+        string id PK
+        string action
+        string targetName
+        string targetType
+        datetime timestamp
+        string userId FK
+    }
+
+    USER ||--o{ PROJECT_MEMBER : joins
+    PROJECT ||--o{ PROJECT_MEMBER : has
+    PROJECT ||--o{ TASK : contains
+    USER ||--o{ TASK : assigned
+    TASK ||--o{ COMMENT : has
+    USER ||--o{ COMMENT : writes
+    USER ||--o{ ACTIVITY_LOG : performs
+```
+
+---
+
+## 📖 Data Dictionary
+
+### 1. `User` Table
+Stores registered member details and credentials.
+
+| Field Name | Data Type | Constraint | Description |
+| :--- | :--- | :--- | :--- |
+| `id` | String | PK, Default: UUID | Unique identifier of the user. |
+| `email` | String | Unique | User's email address (login credential). |
+| `passwordHash` | String | - | Bcrypt hashed login password. |
+| `name` | String | - | First & Last name of the user. |
+| `avatar` | String | - | Colored initials of the user or a URL path to the profile image. |
+| `role` | String | - | Member role (e.g. "Project Manager", "Developer", "Designer"). |
+| `createdAt` | DateTime | Default: `now()` | The date/time user profile was created. |
+| `updatedAt` | DateTime | Auto-update | The date/time user profile was last updated. |
+
+### 2. `Project` Table
+Stores workspace project definitions.
+
+| Field Name | Data Type | Constraint | Description |
+| :--- | :--- | :--- | :--- |
+| `id` | String | PK, Default: UUID | Unique identifier of the project. |
+| `name` | String | - | Name of the project. |
+| `description` | String | Nullable | Optional text description detailing the project. |
+| `dueDate` | DateTime | - | Date when project is scheduled for completion. |
+| `createdAt` | DateTime | Default: `now()` | The date/time project record was created. |
+| `updatedAt` | DateTime | Auto-update | The date/time project record was last updated. |
+
+### 3. `ProjectMember` Table
+Bridge entity representing many-to-many relationship of Users assigned to Projects.
+
+| Field Name | Data Type | Constraint | Description |
+| :--- | :--- | :--- | :--- |
+| `projectId` | String | PK, FK (Project) | Identifier of the project. Cascades on project delete. |
+| `userId` | String | PK, FK (User) | Identifier of the user. Cascades on user delete. |
+
+### 4. `Task` Table
+Stores actionable items under projects.
+
+| Field Name | Data Type | Constraint | Description |
+| :--- | :--- | :--- | :--- |
+| `id` | String | PK, Default: UUID | Unique identifier of the task. |
+| `title` | String | - | Title of the task. |
+| `description` | String | Nullable | Detail description of task deliverables. |
+| `status` | String | - | Status ("Backlog", "To Do", "In Progress", "Review", "Done"). |
+| `priority` | String | - | Severity priority levels ("Low", "Medium", "High"). |
+| `dueDate` | DateTime | - | Due target completion date for the task. |
+| `percentage` | Int | Default: 0 | Work completion percentage (range: 0 to 100). |
+| `imageUrl` | String | Nullable | Optional file/attachment base64 string or image link. |
+| `projectId` | String | FK (Project) | Related project ID. Cascades on project delete. |
+| `assigneeId` | String | FK (User) | Member assigned to complete this task. Restricted delete. |
+| `createdAt` | DateTime | Default: `now()` | The date/time task was created. |
+| `updatedAt` | DateTime | Auto-update | The date/time task was last updated. |
+
+### 5. `Comment` Table
+Stores discussion and comment logs on tasks.
+
+| Field Name | Data Type | Constraint | Description |
+| :--- | :--- | :--- | :--- |
+| `id` | String | PK, Default: UUID | Unique identifier of the comment. |
+| `message` | String | - | Raw text comment content. |
+| `taskId` | String | FK (Task) | Target task ID comment is posted on. Cascades on delete. |
+| `authorId` | String | FK (User) | ID of the commenting user. Cascades on delete. |
+| `createdAt` | DateTime | Default: `now()` | The date/time the comment was posted. |
+
+### 6. `ActivityLog` Table
+Audit trail logging key board movements and workflow activity.
+
+| Field Name | Data Type | Constraint | Description |
+| :--- | :--- | :--- | :--- |
+| `id` | String | PK, Default: UUID | Unique identifier of the activity log item. |
+| `action` | String | - | Text describing action taken (e.g. "created task", "moved task to Done"). |
+| `targetName` | String | - | The title of the entity changed. |
+| `targetType` | String | - | Entity type changed ("task", "project", "comment"). |
+| `timestamp` | DateTime | Default: `now()` | Time the activity took place. |
+| `userId` | String | FK (User) | ID of the user who performed the action. Cascades on delete. |
