@@ -13,10 +13,10 @@ import {
   Palette,
   Bell,
   CheckCircle,
-  Briefcase,
-  Layers,
   Sparkles,
-  Info
+  Info,
+  Lock,
+  AlertCircle
 } from 'lucide-react';
 import { useApp } from '../context/AppContext';
 
@@ -27,18 +27,72 @@ export default function Settings() {
     setTheme,
     notificationsEnabled,
     setNotificationsEnabled,
-    updateUserAvatar
+    updateUserAvatar,
+    changePassword
   } = useApp();
 
   const [avatarInit, setAvatarInit] = useState(currentUser?.avatar || 'SJ');
   const [successMsg, setSuccessMsg] = useState('');
+  const [profileErrorMsg, setProfileErrorMsg] = useState('');
+
+  // Password fields
+  const [currentPassword, setCurrentPassword] = useState('');
+  const [newPassword, setNewPassword] = useState('');
+  const [confirmPassword, setConfirmPassword] = useState('');
+  const [pwdErrorMsg, setPwdErrorMsg] = useState('');
+  const [pwdSuccessMsg, setPwdSuccessMsg] = useState('');
+  const [pwdIsLoading, setPwdIsLoading] = useState(false);
 
   const handleUpdateProfile = (e: React.FormEvent) => {
     e.preventDefault();
-    if (!avatarInit.trim()) return;
+    setProfileErrorMsg('');
+    if (!avatarInit.trim()) {
+      setProfileErrorMsg('Avatar initials are required.');
+      return;
+    }
     
     updateUserAvatar(avatarInit.trim().substring(0, 2));
     triggerSuccess('Workspace profile settings saved successfully.');
+  };
+
+  const handleChangePassword = (e: React.FormEvent) => {
+    e.preventDefault();
+    setPwdErrorMsg('');
+    setPwdSuccessMsg('');
+
+    if (!currentPassword || !newPassword || !confirmPassword) {
+      setPwdErrorMsg('Please fill in all password fields.');
+      return;
+    }
+
+    if (newPassword !== confirmPassword) {
+      setPwdErrorMsg('New passwords do not match.');
+      return;
+    }
+
+    if (newPassword.length < 6) {
+      setPwdErrorMsg('Password must be at least 6 characters long.');
+      return;
+    }
+
+    setPwdIsLoading(true);
+
+    changePassword(currentPassword, newPassword)
+      .then((res) => {
+        setPwdIsLoading(false);
+        if (res.success) {
+          setPwdSuccessMsg('Password changed successfully.');
+          setCurrentPassword('');
+          setNewPassword('');
+          setConfirmPassword('');
+        } else {
+          setPwdErrorMsg(res.error || 'Failed to change password. Please check your current password.');
+        }
+      })
+      .catch(() => {
+        setPwdIsLoading(false);
+        setPwdErrorMsg('Failed to change password. Please try again.');
+      });
   };
 
   const triggerSuccess = (msg: string) => {
@@ -83,7 +137,7 @@ export default function Settings() {
       {/* Settings Grid */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
         
-        {/* Left Column Profile Setting */}
+        {/* Left Column Settings */}
         <div className="lg:col-span-2 space-y-4">
           
           {/* Profile settings */}
@@ -92,6 +146,13 @@ export default function Settings() {
               <UserIcon className="w-4.5 h-4.5 text-[#2563EB]" />
               <span>Workspace Profile details</span>
             </h2>
+
+            {profileErrorMsg && (
+              <div className="p-3 bg-red-50 dark:bg-red-950/20 border border-red-200 dark:border-red-900/40 rounded-lg text-red-750 dark:text-red-400 text-xs flex items-start gap-2">
+                <AlertCircle className="w-4 h-4 flex-shrink-0 mt-0.5" />
+                <span>{profileErrorMsg}</span>
+              </div>
+            )}
 
             {currentUser ? (
               <form onSubmit={handleUpdateProfile} className="space-y-3">
@@ -102,7 +163,7 @@ export default function Settings() {
                       type="text"
                       disabled
                       value={currentUser.name}
-                      className="w-full px-3 py-1.5 rounded-lg border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-950 text-slate-450 text-xs focus:outline-none"
+                      className="w-full px-3 py-1.5 rounded-lg border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-955 text-slate-450 text-xs focus:outline-none"
                     />
                   </div>
 
@@ -112,7 +173,7 @@ export default function Settings() {
                       type="text"
                       disabled
                       value={currentUser.email}
-                      className="w-full px-3 py-1.5 rounded-lg border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-950 text-slate-450 text-xs focus:outline-none"
+                      className="w-full px-3 py-1.5 rounded-lg border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-955 text-slate-450 text-xs focus:outline-none"
                     />
                   </div>
                 </div>
@@ -124,7 +185,7 @@ export default function Settings() {
                       type="text"
                       disabled
                       value={currentUser.role}
-                      className="w-full px-3 py-1.5 rounded-lg border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-950 text-slate-450 text-xs focus:outline-none"
+                      className="w-full px-3 py-1.5 rounded-lg border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-955 text-slate-450 text-xs focus:outline-none"
                     />
                   </div>
 
@@ -145,7 +206,7 @@ export default function Settings() {
                   <button
                     id="save-profile-btn"
                     type="submit"
-                    className="px-4 py-1.5 bg-[#2563EB] hover:bg-blue-700 text-white text-xs font-bold rounded shadow-xs pointer-events-auto cursor-pointer transition-colors"
+                    className="px-4 py-1.5 bg-[#2563EB] hover:bg-blue-700 text-white text-xs font-bold rounded shadow-xs cursor-pointer transition-colors"
                   >
                     Save Avatar Initials
                   </button>
@@ -153,6 +214,83 @@ export default function Settings() {
               </form>
             ) : (
               <p className="text-xs text-slate-400 italic">Please sign in to configure profile metadata.</p>
+            )}
+          </div>
+
+          {/* Change Password settings */}
+          <div className="bg-white dark:bg-[#1E293B] border border-slate-200 dark:border-slate-805 p-4 rounded-xl space-y-4 shadow-sm">
+            <h2 className="text-sm font-bold text-slate-905 dark:text-white flex items-center gap-2 pb-2 border-b border-slate-200 dark:border-slate-850">
+              <Lock className="w-4.5 h-4.5 text-[#2563EB]" />
+              <span>Change Workspace Password</span>
+            </h2>
+
+            {pwdErrorMsg && (
+              <div className="p-3 bg-red-50 dark:bg-red-950/20 border border-red-200 dark:border-red-900/40 rounded-lg text-red-750 dark:text-red-400 text-xs flex items-start gap-2">
+                <AlertCircle className="w-4 h-4 flex-shrink-0 mt-0.5" />
+                <span>{pwdErrorMsg}</span>
+              </div>
+            )}
+
+            {pwdSuccessMsg && (
+              <div className="p-3 bg-emerald-50 dark:bg-emerald-950/20 border border-emerald-200 dark:border-emerald-900/40 rounded-lg text-emerald-800 dark:text-emerald-400 text-xs flex items-center gap-2">
+                <CheckCircle className="w-4 h-4 flex-shrink-0" />
+                <span>{pwdSuccessMsg}</span>
+              </div>
+            )}
+
+            {currentUser ? (
+              <form onSubmit={handleChangePassword} className="space-y-3">
+                <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                  <div>
+                    <label className="block text-[9px] font-bold text-slate-400 uppercase mb-1">Current Password</label>
+                    <input
+                      id="current-password-input"
+                      type="password"
+                      placeholder="••••••••"
+                      value={currentPassword}
+                      onChange={(e) => setCurrentPassword(e.target.value)}
+                      className="w-full px-3 py-1.5 rounded-lg border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 text-slate-900 dark:text-white text-xs focus:outline-none focus:ring-1 focus:ring-blue-500"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-[9px] font-bold text-slate-400 uppercase mb-1">New Password</label>
+                    <input
+                      id="new-password-input"
+                      type="password"
+                      placeholder="••••••••"
+                      value={newPassword}
+                      onChange={(e) => setNewPassword(e.target.value)}
+                      className="w-full px-3 py-1.5 rounded-lg border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 text-slate-900 dark:text-white text-xs focus:outline-none focus:ring-1 focus:ring-blue-500"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-[9px] font-bold text-slate-400 uppercase mb-1">Confirm New Password</label>
+                    <input
+                      id="confirm-password-input"
+                      type="password"
+                      placeholder="••••••••"
+                      value={confirmPassword}
+                      onChange={(e) => setConfirmPassword(e.target.value)}
+                      className="w-full px-3 py-1.5 rounded-lg border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 text-slate-900 dark:text-white text-xs focus:outline-none focus:ring-1 focus:ring-blue-500"
+                    />
+                  </div>
+                </div>
+
+                <div className="flex justify-end pt-1">
+                  <button
+                    id="change-password-btn"
+                    type="submit"
+                    disabled={pwdIsLoading}
+                    className="px-4 py-1.5 bg-[#2563EB] hover:bg-blue-700 disabled:bg-blue-600/60 text-white text-xs font-bold rounded shadow-xs cursor-pointer transition-colors"
+                  >
+                    {pwdIsLoading ? 'Saving...' : 'Update Password'}
+                  </button>
+                </div>
+              </form>
+            ) : (
+              <p className="text-xs text-slate-400 italic">Please sign in to update your password.</p>
             )}
           </div>
 
@@ -223,11 +361,11 @@ export default function Settings() {
                   triggerSuccess(`Notifications ${!notificationsEnabled ? 'enabled' : 'disabled'} successfully.`);
                 }}
                 className={`relative inline-flex h-5 w-10 mt-1 flex-shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none ${
-                  notificationsEnabled ? 'bg-[#2563EB]' : 'bg-slate-200 dark:bg-slate-805'
+                  notificationsEnabled ? 'bg-[#2563EB]' : 'bg-slate-200 dark:bg-slate-850'
                 }`}
               >
                 <span
-                  className={`pointer-events-none inline-block h-4 w-4 transform rounded-full bg-white shadow ring-0 transition duration-200 ease-in-out ${
+                  className={`pointer-events-none inline-block h-4 w-4 transform rounded-full bg-white shadow ring-0 transition duration-205 ease-in-out ${
                     notificationsEnabled ? 'translate-x-5' : 'translate-x-0'
                   }`}
                 />

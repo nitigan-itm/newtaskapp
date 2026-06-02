@@ -1,5 +1,5 @@
 import { Router } from 'express';
-import { getUsers, createUser, updateAvatar, getUsersProgress } from '../controllers/userController';
+import { getUsers, createUser, updateAvatar, getUsersProgress, changePassword } from '../controllers/userController';
 import { authenticateToken } from '../middlewares/authMiddleware';
 
 const router = Router();
@@ -11,5 +11,6 @@ router.get('/', getUsers as any);
 router.post('/', createUser as any);
 router.patch('/avatar', updateAvatar as any);
 router.get('/progress', getUsersProgress as any);
+router.patch('/password', changePassword as any);
 
 export default router;

@@ -1,4 +1,5 @@
 import { Response } from 'express';
+import * as bcrypt from 'bcrypt';
 import prisma from '../config/database';
 import { AuthRequest } from '../types';
 
@@ -148,6 +149,40 @@ export const getUsersProgress = async (req: AuthRequest, res: Response) => {
     return res.json(progressList);
   } catch (error) {
     console.error('getUsersProgress error:', error);
+    return res.status(500).json({ error: 'Internal server error' });
+  }
+};
+
+export const changePassword = async (req: AuthRequest, res: Response) => {
+  try {
+    if (!req.user) {
+      return res.status(401).json({ error: 'Unauthorized' });
+    }
+
+    const { currentPassword, newPassword } = req.body;
+    if (!currentPassword || !newPassword) {
+      return res.status(400).json({ error: 'Current password and new password are required' });
+    }
+
+    const user = await prisma.user.findUnique({ where: { id: req.user.id } });
+    if (!user) {
+      return res.status(404).json({ error: 'User not found' });
+    }
+
+    const match = await bcrypt.compare(currentPassword, user.passwordHash);
+    if (!match) {
+      return res.status(400).json({ error: 'Incorrect current password' });
+    }
+
+    const newPasswordHash = await bcrypt.hash(newPassword, 10);
+    await prisma.user.update({
+      where: { id: req.user.id },
+      data: { passwordHash: newPasswordHash },
+    });
+
+    return res.json({ success: true, message: 'Password updated successfully' });
+  } catch (error) {
+    console.error('changePassword error:', error);
     return res.status(500).json({ error: 'Internal server error' });
   }
 };
